@@ -1,12 +1,13 @@
 # OpenVoice Server
 
-This server provides voice cloning and tone color conversion services via HTTP API, isolating OpenVoice functionality in its own conda environment.
+This server provides voice cloning, tone color conversion, and MeloTTS text-to-speech services via HTTP API, isolating OpenVoice and MeloTTS functionality in its own conda environment.
 
 ## Features
 
 - **Speaker Embedding Extraction**: Extract speaker embeddings from audio files
 - **Tone Color Conversion**: Convert audio tone color using speaker embeddings
 - **Voice Cloning**: Complete voice cloning process with tone color conversion
+- **MeloTTS Integration**: Text-to-speech generation with multiple language support
 - **Health Monitoring**: Server health and status endpoints
 
 ## Server Endpoints
@@ -15,7 +16,32 @@ This server provides voice cloning and tone color conversion services via HTTP A
 ```
 GET /health
 ```
-Returns server status and model information.
+Returns server status and model information including loaded MeloTTS models.
+
+### MeloTTS Speakers
+```
+GET /melo-speakers?language=EN_NEWEST
+```
+Returns available speaker IDs for a given MeloTTS language.
+
+**Query Parameters:**
+- `language`: MeloTTS language code (default: EN_NEWEST)
+
+### MeloTTS Audio Generation
+```
+POST /generate-melo-base-audio
+```
+Generate base audio using MeloTTS with specified speaker and language.
+
+**Request Body:**
+```json
+{
+    "text": "Text to convert to speech",
+    "speaker_key": "speaker_name",
+    "output_path": "/path/to/output.wav",
+    "language": "EN_NEWEST"
+}
+```
 
 ### Speaker Embedding Extraction
 ```
@@ -74,6 +100,12 @@ POST /process
 ```
 Generic endpoint that routes to appropriate processing based on request type.
 
+### Shutdown
+```
+POST /shutdown
+```
+Graceful server shutdown endpoint.
+
 ## Setup
 
 1. **Create conda environment:**
@@ -87,7 +119,14 @@ conda activate openvoice
 pip install -r requirements_server.txt
 ```
 
-3. **Start server:**
+3. **Download required NLTK data:**
+```python
+import nltk
+nltk.download('averaged_perceptron_tagger_eng')
+nltk.download('averaged_perceptron_tagger')
+```
+
+4. **Start server:**
 ```bash
 python server.py
 ```
@@ -98,17 +137,19 @@ The server will start on port 8009.
 
 The main application (`srt_to_speech.py`) automatically starts the OpenVoice server when needed and communicates with it via HTTP requests. The server provides:
 
-- **Isolated Environment**: OpenVoice runs in its own conda environment
+- **Isolated Environment**: OpenVoice and MeloTTS run in their own conda environment
 - **Resource Management**: Automatic server lifecycle management
 - **Error Handling**: Graceful error handling and logging
 - **Temporary File Management**: Automatic cleanup of temporary files
+- **Dynamic Model Loading**: MeloTTS models are loaded on-demand based on language requirements
 
-## Testing
+## MeloTTS Language Support
 
-Run the test script to verify server functionality:
-```bash
-python test_server.py
-```
+The server supports multiple MeloTTS languages including:
+- EN_NEWEST (default)
+- Other language codes as supported by MeloTTS
+
+Models are loaded dynamically when first requested for a specific language.
 
 ## Logs
 
@@ -127,10 +168,6 @@ Key dependencies include:
 - PyTorch for deep learning models
 - Librosa for audio processing
 - Soundfile for audio I/O
-- OpenVoice core libraries 
-
-## Download
-ReadMe.MD + Below Things
-import nltk
-nltk.download('averaged_perceptron_tagger_eng')
-nltk.download('averaged_perceptron_tagger')
+- OpenVoice core libraries
+- MeloTTS for text-to-speech generation
+- NLTK for natural language processing
