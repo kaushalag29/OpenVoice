@@ -350,8 +350,8 @@ async def process_request(request: Dict[str, Any]):
 
 @app.post("/shutdown")
 async def shutdown():
-    """Graceful shutdown endpoint"""
     logger.info("Shutdown request received")
+    os._exit(0)
     return {"status": "shutdown", "message": "Server shutting down"}
 
 if __name__ == "__main__":
