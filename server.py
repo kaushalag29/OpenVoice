@@ -31,6 +31,9 @@ if torch.cuda.is_available():
     device = "cuda"
 logger.info(f"Using device: {device}")
 
+if torch.backends.mps.is_available() and device == 'cpu':
+    torch.backends.mps.is_available = lambda: False  # Force disable MPS
+
 # Load OpenVoice models at startup
 tone_color_converter = None
 melo_models: Dict[str, MELOTTS] = {}  # Dictionary to hold language-specific models
